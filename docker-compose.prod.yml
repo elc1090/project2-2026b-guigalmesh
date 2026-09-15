@@ -1,0 +1,23 @@
+version: "3.9"
+
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+# Builda as imagens de produção (multi-stage) e remove os volumes de hot-reload.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: production
+    volumes: []
+    command: node dist/server.js
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    volumes: []
+    ports:
+      - "80:80"
+    command: nginx -g "daemon off;"
+    restart: always

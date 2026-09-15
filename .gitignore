@@ -1,0 +1,40 @@
+# ==============================
+# Dependências do Node.js
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ==============================
+# Variáveis de Ambiente (Segurança)
+# ==============================
+# Nunca comite arquivos reais de .env, pois eles contêm senhas do banco e URLs.
+.env
+.env.*
+# Exceção: é boa prática comitar um arquivo de exemplo vazio para documentação
+!.env.example
+
+# ==============================
+# Builds e Compilações
+# ==============================
+# Ignora as pastas geradas quando você compilar o front-end ou o back-end
+dist/
+build/
+out/
+/frontend/dist/
+/backend/dist/
+
+# ==============================
+# Arquivos de Sistema e IDEs
+# ==============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Banco de Dados Local (opcional)
+# ==============================
+# Caso você mapeie o volume do PostgreSQL para uma pasta local, ignore-a
+.pgdata/
+db-data/
