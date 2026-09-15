@@ -1,4 +1,4 @@
-# Carteira de Investimentos — starter com Docker
+# project2-2026b-guigalmesh
 
 Scaffold inicial (backend Express + TypeScript, frontend React + Vite + TypeScript,
 banco PostgreSQL), pronto para rodar em Docker tanto em desenvolvimento quanto em produção.
