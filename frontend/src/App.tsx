@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Sidebar } from "./components/Sidebar";
+import { DashboardResumo } from "./features/carteira/DashboardResumo";
 import { SummaryCard } from "./components/SummaryCard";
 import { Wallet, TrendingUp, Landmark } from 'lucide-react';
 
@@ -15,43 +17,16 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="flex min-h-screen bg-gray-50 font-sans">
+      <Sidebar />
 
-        {/* Cabeçalho */}
-        <header>
-          <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
-          <p className="text-gray-500 mt-1">Acompanhe o desempenho da sua carteira.</p>
-        </header>
-
-        {/* Grid de Cards com Ícones Aplicados */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SummaryCard
-            title="Patrimônio Total"
-            value="R$ 142.300,50"
-            icon={<Wallet size={20} />}
-            trend={{ value: "2.4%", isPositive: true }}
-          />
-          <SummaryCard
-            title="Valor Investido"
-            value="R$ 120.000,00"
-            icon={<Landmark size={20} />}
-          />
-          <SummaryCard
-            title="Rentabilidade Total"
-            value="R$ 22.300,50"
-            icon={<TrendingUp size={20} />}
-            trend={{ value: "18.58%", isPositive: true }}
-          />
+      <main className="flex-1 p-8 overflow-y-auto">
+        <div className="max-w-6xl mx-auto">
+          {/* Aqui, no futuro, o React Router vai decidir qual feature renderizar.
+              Por enquanto, chamamos o Dashboard direto. */}
+          <DashboardResumo />
         </div>
-
-        {/* Espaço para o Gráfico */}
-        <div className="bg-white rounded-xl border border-gray-100 h-96 flex flex-col items-center justify-center text-gray-400">
-          <TrendingUp size={48} className="text-gray-200 mb-4" />
-          Área reservada para o Gráfico de Evolução Patrimonial
-        </div>
-
-      </div>
+      </main>
     </div>
   );
 }
