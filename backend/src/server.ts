@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { Pool } from "pg";
+import { pool } from "./db/pool";
+import operacoesRouter from "./routes/operacoes.routes";
 
 const app = express();
 app.use(cors());
@@ -8,16 +9,8 @@ app.use(express.json());
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3333;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-// Healthcheck simples: confirma que a API está de pé.
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
-
-// Healthcheck do banco: confirma que a conexão com o Postgres funciona.
 app.get("/health/db", async (_req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
@@ -27,7 +20,7 @@ app.get("/health/db", async (_req, res) => {
   }
 });
 
-// TODO: montar aqui as rotas de /operacoes (CRUD de compra/venda de ativos)
+app.use("/api/v1/operacoes", operacoesRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend rodando em http://localhost:${PORT}`);
