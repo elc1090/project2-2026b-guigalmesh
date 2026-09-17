@@ -1,4 +1,5 @@
 import { Plus, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function OperacoesView() {
   // Mock para simular o visual do histórico de operações
@@ -16,10 +17,13 @@ export function OperacoesView() {
           <h1 className="text-2xl font-bold text-gray-900">Operações</h1>
           <p className="text-gray-500 mt-1">Gerencie suas compras e vendas.</p>
         </div>
-        <button className="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm">
-          <Plus size={20} />
-          Nova Operação
-        </button>
+        <Link
+            to="/operacoes/nova"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
+        >
+            <Plus size={20} />
+            Nova Operação
+        </Link>
       </header>
 
       {/* Histórico Recente */}

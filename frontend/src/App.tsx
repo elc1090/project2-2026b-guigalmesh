@@ -3,6 +3,8 @@ import { Sidebar } from "./components/Sidebar";
 import { DashboardResumo } from "./features/carteira/DashboardResumo";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { OperacoesView } from './features/operacoes/OperacoesView';
+import { OperacaoForm } from './features/operacoes/OperacaoForm';
+import { AtivosView } from './features/ativos/AtivosView';
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3333";
 
@@ -29,7 +31,9 @@ export default function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
               <Route path="/dashboard" element={<DashboardResumo />} />
+              <Route path="/ativos" element={<AtivosView />} />
               <Route path="/operacoes" element={<OperacoesView />} />
+              <Route path="/operacoes/nova" element={<OperacaoForm />} />
 
               {/* Placeholder para quando formos fazer a tela de ativos */}
               <Route path="/ativos" element={
