@@ -3,27 +3,26 @@ import { Wallet, TrendingUp, Landmark } from 'lucide-react';
 import { SummaryCard } from '../../components/SummaryCard';
 import { GraficoRentabilidade, DataPoint } from './GraficoRentabilidade';
 import { TabelaAtivos, AtivoResumo } from './TabelaAtivos';
-import { getPosicoes } from '../../services/carteiraService';
+import { getPosicoes, getEvolucaoPatrimonial } from '../../services/carteiraService';
 
-const mockHistoricoPatrimonio: DataPoint[] = [
-  { mes: 'Mar', patrimonio: 98000 },
-  { mes: 'Abr', patrimonio: 105000 },
-  { mes: 'Mai', patrimonio: 103500 },
-  { mes: 'Jun', patrimonio: 112000 },
-  { mes: 'Jul', patrimonio: 125000 },
-  { mes: 'Ago', patrimonio: 138000 },
-  { mes: 'Set', patrimonio: 142300.50 },
-];
 
 export function DashboardResumo() {
   const [ativos, setAtivos] = useState<AtivoResumo[]>([]);
+  const [historico, setHistorico] = useState<DataPoint[]>([]); // NOVO ESTADO
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    getPosicoes()
-      .then(setAtivos)
-      .catch(console.error)
-      .finally(() => setCarregando(false));
+    // Dispara as duas requisições ao mesmo tempo
+    Promise.all([
+      getPosicoes(),
+      getEvolucaoPatrimonial()
+    ])
+    .then(([dadosAtivos, dadosHistorico]) => {
+      setAtivos(dadosAtivos);
+      setHistorico(dadosHistorico);
+    })
+    .catch(console.error)
+    .finally(() => setCarregando(false));
   }, []);
 
   // Cálculos dinâmicos baseados no banco de dados
@@ -65,7 +64,7 @@ export function DashboardResumo() {
         />
       </div>
 
-      <GraficoRentabilidade data={mockHistoricoPatrimonio} />
+      <GraficoRentabilidade data={historico} />
 
       <div className="relative">
         {carregando && (

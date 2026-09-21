@@ -11,3 +11,9 @@ export function createOperacao(payload: CreateOperacaoPayload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function deleteOperacao(id: number) {
+  return apiFetch(`/api/v1/operacoes/${id}`, {
+    method: "DELETE",
+  });
+}

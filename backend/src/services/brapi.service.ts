@@ -52,3 +52,35 @@ export async function getCotacaoAtualizada(ativoId: number, ticker: string): Pro
   // Fallback: se a API falhar ou o ativo não existir lá (ex: Renda Fixa), devolve o que tinha
   return ativo ? Number(ativo.cotacao_atual) : 0;
 }
+
+export async function popularCacheHistorico(ativoId: number, ticker: string) {
+  if (!process.env.BRAPI_TOKEN) return;
+
+  try {
+    // interval=1mo e range=6mo trazem o fechamento mensal dos últimos 6 meses
+    const response = await fetch(`https://brapi.dev/api/quote/${ticker}?range=6mo&interval=1mo&token=${process.env.BRAPI_TOKEN}`);
+    const data = await response.json();
+
+    const historico = data.results?.[0]?.historicalDataPrice;
+    if (!historico) return;
+
+    for (const ponto of historico) {
+      // A Brapi envia a data em timestamp UNIX (segundos). Convertendo para ISO:
+      const dataRef = new Date(ponto.date * 1000).toISOString().split('T')[0];
+      const preco = ponto.close;
+
+      if (preco) {
+        // O DO UPDATE garante que o preço do mês atual seja atualizado diariamente até o mês fechar
+        await pool.query(
+          `INSERT INTO historico_cotacoes (ativo_id, data_referencia, preco_fechamento)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (ativo_id, data_referencia)
+           DO UPDATE SET preco_fechamento = EXCLUDED.preco_fechamento`,
+          [ativoId, dataRef, preco]
+        );
+      }
+    }
+  } catch (erro) {
+    console.error(`Erro ao buscar histórico de ${ticker}:`, erro);
+  }
+}

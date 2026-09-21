@@ -102,3 +102,77 @@ export async function listOperacoes(usuarioId: string) {
   );
   return resultado.rows;
 }
+
+export async function deleteOperacao(usuarioId: string, operacaoId: number) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Descobre qual é o ativo desta operação antes de apagá-la
+    const opQuery = await client.query(
+      "SELECT ativo_id FROM operacoes WHERE id = $1 AND usuario_id = $2 FOR UPDATE",
+      [operacaoId, usuarioId]
+    );
+
+    if (opQuery.rows.length === 0) {
+      throw new Error("Operação não encontrada ou não pertence ao usuário.");
+    }
+
+    const ativoId = opQuery.rows[0].ativo_id;
+
+    // 2. Apaga a operação
+    await client.query("DELETE FROM operacoes WHERE id = $1", [operacaoId]);
+
+    // 3. Puxa todas as operações restantes deste ativo para reconstruir o PM
+    const restantes = await client.query(
+      `SELECT tipo, quantidade, preco_unitario, custos
+       FROM operacoes
+       WHERE usuario_id = $1 AND ativo_id = $2
+       ORDER BY data_operacao ASC, id ASC`,
+      [usuarioId, ativoId]
+    );
+
+    let novaQuantidade = 0;
+    let novoPrecoMedio = 0;
+
+    // 4. Reconstrói a posição cronologicamente
+    for (const op of restantes.rows) {
+      const qtd = Number(op.quantidade);
+      const preco = Number(op.preco_unitario);
+      const custos = Number(op.custos);
+
+      if (op.tipo === 'COMPRA') {
+        const custoTotalAnterior = novaQuantidade * novoPrecoMedio;
+        const custoTotalDaCompra = (qtd * preco) + custos;
+        novaQuantidade += qtd;
+        novoPrecoMedio = (custoTotalAnterior + custoTotalDaCompra) / novaQuantidade;
+      } else {
+        novaQuantidade -= qtd;
+        novoPrecoMedio = novaQuantidade === 0 ? 0 : novoPrecoMedio;
+      }
+    }
+
+    // 5. Atualiza a carteira ou remove o ativo se a quantidade zerar e não houver mais histórico
+    if (restantes.rows.length === 0) {
+      await client.query(
+        "DELETE FROM posicoes_carteira WHERE usuario_id = $1 AND ativo_id = $2",
+        [usuarioId, ativoId]
+      );
+    } else {
+      await client.query(
+        `UPDATE posicoes_carteira
+         SET quantidade = $1, preco_medio = $2
+         WHERE usuario_id = $3 AND ativo_id = $4`,
+        [novaQuantidade, novoPrecoMedio, usuarioId, ativoId]
+      );
+    }
+
+    await client.query("COMMIT");
+  } catch (erro) {
+    await client.query("ROLLBACK");
+    throw erro;
+  } finally {
+    client.release();
+  }
+}
