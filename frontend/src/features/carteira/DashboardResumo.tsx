@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Wallet, TrendingUp, Landmark } from 'lucide-react';
 import { SummaryCard } from '../../components/SummaryCard';
 import { GraficoRentabilidade, DataPoint } from './GraficoRentabilidade';
 import { TabelaAtivos, AtivoResumo } from './TabelaAtivos';
+import { getPosicoes } from '../../services/carteiraService';
 
 const mockHistoricoPatrimonio: DataPoint[] = [
   { mes: 'Mar', patrimonio: 98000 },
@@ -13,49 +15,66 @@ const mockHistoricoPatrimonio: DataPoint[] = [
   { mes: 'Set', patrimonio: 142300.50 },
 ];
 
-const mockAtivos: AtivoResumo[] = [
-  { ticker: 'ITUB4', tipo: 'Ação', quantidade: 300, precoMedio: 28.50, cotacaoAtual: 34.20, rentabilidade: 20.00 },
-  { ticker: 'PETR4', tipo: 'Ação', quantidade: 500, precoMedio: 36.10, cotacaoAtual: 39.50, rentabilidade: 9.41 },
-  { ticker: 'HGLG11', tipo: 'FII', quantidade: 120, precoMedio: 162.00, cotacaoAtual: 158.50, rentabilidade: -2.16 },
-  { ticker: 'VALE3', tipo: 'Ação', quantidade: 200, precoMedio: 68.90, cotacaoAtual: 62.10, rentabilidade: -9.86 },
-  { ticker: 'Tesouro IPCA+', tipo: 'Renda Fixa', quantidade: 5, precoMedio: 3100.00, cotacaoAtual: 3250.00, rentabilidade: 4.83 },
-];
-
 export function DashboardResumo() {
+  const [ativos, setAtivos] = useState<AtivoResumo[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    getPosicoes()
+      .then(setAtivos)
+      .catch(console.error)
+      .finally(() => setCarregando(false));
+  }, []);
+
+  // Cálculos dinâmicos baseados no banco de dados
+  const valorInvestido = ativos.reduce((acc, ativo) => acc + (ativo.quantidade * ativo.precoMedio), 0);
+  const patrimonioTotal = ativos.reduce((acc, ativo) => acc + (ativo.quantidade * ativo.cotacaoAtual), 0);
+  const rentabilidadeTotal = patrimonioTotal - valorInvestido;
+  const rentabilidadePercentual = valorInvestido > 0 ? (rentabilidadeTotal / valorInvestido) * 100 : 0;
+  const isPositiva = rentabilidadeTotal >= 0;
+
+  const formatarMoeda = (valor: number) =>
+    `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
   return (
-    <div className="space-y-8">
-      {/* Cabeçalho */}
+    <div className="space-y-8 pb-12">
       <header>
         <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
         <p className="text-gray-500 mt-1">Acompanhe o desempenho da sua carteira.</p>
       </header>
 
-      {/* Grid de Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard
           title="Patrimônio Total"
-          value="R$ 142.300,50"
+          value={formatarMoeda(patrimonioTotal)}
           icon={<Wallet size={20} />}
-          trend={{ value: "2.4%", isPositive: true }}
         />
         <SummaryCard
           title="Valor Investido"
-          value="R$ 120.000,00"
+          value={formatarMoeda(valorInvestido)}
           icon={<Landmark size={20} />}
         />
         <SummaryCard
           title="Rentabilidade Total"
-          value="R$ 22.300,50"
+          value={formatarMoeda(rentabilidadeTotal)}
           icon={<TrendingUp size={20} />}
-          trend={{ value: "18.58%", isPositive: true }}
+          trend={{
+            value: `${Math.abs(rentabilidadePercentual).toFixed(2).replace('.', ',')}%`,
+            isPositive: isPositiva
+          }}
         />
       </div>
 
-      {/* Gráfico injetado de forma limpa */}
       <GraficoRentabilidade data={mockHistoricoPatrimonio} />
 
-      <TabelaAtivos ativos={mockAtivos} />
-
+      <div className="relative">
+        {carregando && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+            <span className="text-emerald-700 font-medium">Atualizando posições...</span>
+          </div>
+        )}
+        <TabelaAtivos ativos={ativos} />
+      </div>
     </div>
   );
 }
