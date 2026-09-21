@@ -3,6 +3,7 @@ import { pool } from "../db/pool";
 export async function getPosicoesCarteira(usuarioId: string) {
   const resultado = await pool.query(
     `SELECT
+       a.id AS ativo_id,
        a.ticker_base AS ticker,
        a.classe AS tipo,
        pc.quantidade,
