@@ -34,11 +34,6 @@ export default function App() {
               <Route path="/ativos" element={<AtivosView />} />
               <Route path="/operacoes" element={<OperacoesView />} />
               <Route path="/operacoes/nova" element={<OperacaoForm />} />
-
-              {/* Placeholder para quando formos fazer a tela de ativos */}
-              <Route path="/ativos" element={
-                <div className="text-gray-500 text-center mt-20">Tela de Ativos em construção...</div>
-              } />
             </Routes>
           </div>
         </main>

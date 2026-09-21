@@ -1,152 +1,149 @@
-// src/features/operacoes/OperacaoForm.tsx
-import { ArrowLeft, Save } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { createOperacao } from "../../services/operacoesService";
+import { ApiError } from "../../services/api";
+import type { ClasseAtivo, TipoOperacao } from "../../types/operacao";
 
 interface FormData {
-  tipo: 'COMPRA' | 'VENDA';
+  tipo: TipoOperacao;
   ticker: string;
   data: string;
   quantidade: number | '';
   preco: number | '';
+  custos: number | '';
 }
+
+const CLASSES: { value: ClasseAtivo; label: string }[] = [
+  { value: 'ACAO', label: 'Ação' },
+  { value: 'FII', label: 'FII' },
+  { value: 'RENDA_FIXA', label: 'Renda Fixa' },
+];
 
 export function OperacaoForm() {
   const navigate = useNavigate();
-
-  // O estado que guarda todos os campos do formulário
   const [formData, setFormData] = useState<FormData>({
     tipo: 'COMPRA',
     ticker: '',
     data: '',
     quantidade: '',
     preco: '',
+    custos: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const [precisaClasse, setPrecisaClasse] = useState(false);
+  const [classe, setClasse] = useState<ClasseAtivo | ''>('');
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-    setFormData(prev => ({
-      ...prev,
-      // Se for quantidade ou preço, converte para número (ou vazio se o usuário apagar)
-      [name]: (name === 'quantidade' || name === 'preco')
-        ? (value === '' ? '' : Number(value))
-        : (name === 'ticker' ? value.toUpperCase() : value)
-    }));
-  };
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErro(null);
 
-  // Função disparada ao clicar em "Salvar"
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault(); // Impede a página de recarregar
+    if (precisaClasse && !classe) {
+      setErro('Selecione a classe do ativo para continuar.');
+      return;
+    }
 
-    // Aqui faremos o fetch() para a API Node.js
-    console.log("Dados prontos para envio:", formData);
-
-    alert('Operação salva com sucesso! (Simulação)');
-    navigate('/operacoes');
-  };
+    setEnviando(true);
+    try {
+      await createOperacao({
+        ticker: formData.ticker,
+        tipo: formData.tipo,
+        data: formData.data,
+        quantidade: Number(formData.quantidade),
+        preco: Number(formData.preco),
+        custos: formData.custos === '' ? 0 : Number(formData.custos),
+        ...(precisaClasse && classe ? { classe } : {}),
+      });
+      navigate('/operacoes');
+    } catch (err) {
+      if (err instanceof ApiError && err.codigo === 'ATIVO_DESCONHECIDO') {
+        setPrecisaClasse(true);
+        setErro('Esse ticker ainda não está cadastrado. Selecione a classe abaixo e envie de novo.');
+      } else if (err instanceof ApiError) {
+        setErro(err.message);
+      } else {
+        setErro('Não foi possível conectar ao servidor.');
+      }
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
-    <div className="space-y-8 max-w-2xl pb-12">
-      <header className="flex items-center gap-4">
-        <Link to="/operacoes" className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
-          <ArrowLeft size={24} />
-        </Link>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto bg-white rounded-xl border border-green-100 p-6 space-y-4">
+      <h2 className="text-lg font-semibold text-gray-900">Nova operação</h2>
+
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={() => setFormData((f) => ({ ...f, tipo: 'COMPRA' }))}
+          className={`py-2 rounded-lg text-sm font-medium border ${formData.tipo === 'COMPRA' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-600 border-gray-200'}`}>
+          Compra
+        </button>
+        <button type="button" onClick={() => setFormData((f) => ({ ...f, tipo: 'VENDA' }))}
+          className={`py-2 rounded-lg text-sm font-medium border ${formData.tipo === 'VENDA' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-600 border-gray-200'}`}>
+          Venda
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-600 mb-1">Ticker</label>
+        <input type="text" value={formData.ticker}
+          onChange={(e) => setFormData((f) => ({ ...f, ticker: e.target.value.toUpperCase() }))}
+          placeholder="PETR4"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+          required />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nova Operação</h1>
-          <p className="text-gray-500 mt-1">Registre uma compra ou venda na sua carteira.</p>
+          <label className="block text-sm text-gray-600 mb-1">Quantidade</label>
+          <input type="number" step="any" value={formData.quantidade}
+            onChange={(e) => setFormData((f) => ({ ...f, quantidade: e.target.value === '' ? '' : Number(e.target.value) }))}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            required />
         </div>
-      </header>
-
-      {/* Trocamos a div form por um <form> real apontando para handleSubmit */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-6 space-y-6">
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Tipo de Operação</label>
-            <select
-              name="tipo" // name é crucial para o handleChange
-              value={formData.tipo}
-              onChange={handleChange}
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
-            >
-              <option value="COMPRA">Compra</option>
-              <option value="VENDA">Venda</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Código do Ativo</label>
-            <input
-              type="text"
-              name="ticker"
-              value={formData.ticker}
-              onChange={handleChange}
-              required
-              placeholder="Ex: PETR4, HGLG11"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors uppercase"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Data da Operação</label>
-            <input
-              type="date"
-              name="data"
-              value={formData.data}
-              onChange={handleChange}
-              required
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Quantidade</label>
-            <input
-              type="number"
-              name="quantidade"
-              value={formData.quantidade}
-              onChange={handleChange}
-              required
-              min="1"
-              step="1" // Força ser número inteiro (não dá pra comprar meia ação)
-              placeholder="Ex: 100"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">Preço Unitário (R$)</label>
-            <input
-              type="number"
-              name="preco"
-              value={formData.preco}
-              onChange={handleChange}
-              required
-              min="0.01"
-              step="0.01" // Permite centavos
-              placeholder="0,00"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
-            />
-          </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Preço unitário</label>
+          <input type="number" step="any" value={formData.preco}
+            onChange={(e) => setFormData((f) => ({ ...f, preco: e.target.value === '' ? '' : Number(e.target.value) }))}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            required />
         </div>
+      </div>
 
-        <hr className="border-gray-100" />
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Link to="/operacoes" className="px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors">
-            Cancelar
-          </Link>
-          <button
-            type="submit" // Trocado para submit para disparar o form
-            className="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Save size={20} />
-            Salvar Operação
-          </button>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Data</label>
+          <input type="date" value={formData.data}
+            onChange={(e) => setFormData((f) => ({ ...f, data: e.target.value }))}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            required />
         </div>
-      </form>
-    </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Custos (opcional)</label>
+          <input type="number" step="any" value={formData.custos}
+            onChange={(e) => setFormData((f) => ({ ...f, custos: e.target.value === '' ? '' : Number(e.target.value) }))}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600" />
+        </div>
+      </div>
+
+      {precisaClasse && (
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Classe do ativo</label>
+          <select value={classe} onChange={(e) => setClasse(e.target.value as ClasseAtivo)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+            <option value="">Selecione...</option>
+            {CLASSES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+      )}
+
+      {erro && <p className="text-sm text-red-600">{erro}</p>}
+
+      <button type="submit" disabled={enviando}
+        className="w-full py-2.5 rounded-lg bg-green-700 text-white text-sm font-medium disabled:opacity-50">
+        {enviando ? 'Enviando...' : 'Registrar operação'}
+      </button>
+    </form>
   );
 }
