@@ -24,6 +24,6 @@ app.get("/health/db", async (_req, res) => {
 app.use("/api/v1/operacoes", operacoesRouter);
 app.use("/api/v1/carteira", carteiraRouter);
 
-app.listen(PORT, () => {
-  console.log(`Backend rodando em http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend rodando na porta {PORT}`);
 });
