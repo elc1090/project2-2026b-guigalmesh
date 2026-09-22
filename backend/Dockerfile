@@ -13,7 +13,6 @@ CMD ["npm", "run", "dev"]
 
 # ---------- build: compila TypeScript -> JavaScript ----------
 FROM base AS build
-ENV NODE_ENV=production
 RUN npm install
 COPY . .
 RUN npm run build
@@ -25,5 +24,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
+COPY migrations ./migrations
 EXPOSE 3333
 CMD ["node", "dist/server.js"]
