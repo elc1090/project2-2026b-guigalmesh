@@ -1,6 +1,8 @@
 # project2-2026b-guigalmesh
 # Projeto: Aplicação com persistência de dados em backend
 
+![Substitua a imagem ao lado por um GIF/WEBP animado mostrando seu projeto](./gif.gif)
+
 ## Acesso
 
 https://carteira-frontend-j2me.onrender.com/ativos
