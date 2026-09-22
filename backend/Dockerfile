@@ -26,4 +26,4 @@ RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
 COPY migrations ./migrations
 EXPOSE 3333
-CMD ["node", "dist/server.js"]
+CMD ["npm", "start"]
