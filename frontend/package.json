@@ -1,27 +1,29 @@
 {
-  "name": "carteira-frontend",
+  "name": "carteira-backend",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create"
   },
   "dependencies": {
-    "lucide-react": "^1.46.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.4",
-    "recharts": "^3.10.1"
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.3",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^5.5.4",
-    "vite": "^5.2.0"
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
   }
 }

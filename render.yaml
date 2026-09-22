@@ -1,0 +1,28 @@
+databases:
+  - name: carteira-db
+    plan: free
+
+services:
+  - type: web
+    name: carteira-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: sh -c "npm run migrate:up && node dist/server.js"
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: carteira-db
+          property: connectionString
+
+  - type: web
+    name: carteira-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://carteira-backend.onrender.com
