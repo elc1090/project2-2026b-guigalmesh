@@ -21,6 +21,7 @@ Guilherme Serafini Dapieve
 
 ## Feedback/comentário da parceria/cliente/usuário
 
+"Achei a aplicação muito bem construída, com um visual limpo e bem fácil de usar. Todas as funcionalidades pedidas foram cumpridas com sucesso: o cadastro de compra e venda dos ativos, os cálculos de preço médio e rentabilidade ficaram automáticos e precisos, e o dashboard com gráficos mostra o desempenho da carteira de forma bem clara. No geral, o projeto foi bem executado e entrega o que foi proposto."
 
 ## Desenvolvimento
 
