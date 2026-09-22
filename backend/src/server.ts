@@ -5,7 +5,10 @@ import operacoesRouter from "./routes/operacoes.routes";
 import carteiraRouter from "./routes/carteira.routes";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(express.json());
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3333;
