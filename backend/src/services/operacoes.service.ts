@@ -1,8 +1,9 @@
 import { PoolClient } from "pg";
 import { pool } from "../db/pool";
 import { normalizeTicker } from "../lib/ticker";
-import { AtivoDesconhecidoError, SaldoInsuficienteError } from "../lib/errors";
+import { AtivoDesconhecidoError, SaldoInsuficienteError, TickerInvalidoError } from "../lib/errors";
 import { CreateOperacaoInput } from "../types/operacao";
+import { validarTickerNaB3 } from "./brapi.service";
 
 async function findOrCreateAtivo(client: PoolClient, tickerBase: string, classe?: string) {
   const existente = await client.query(
@@ -12,6 +13,13 @@ async function findOrCreateAtivo(client: PoolClient, tickerBase: string, classe?
   if (existente.rows[0]) return existente.rows[0];
 
   if (!classe) throw new AtivoDesconhecidoError(tickerBase);
+
+  if (classe === "ACAO" || classe === "FII") {
+    const isValido = await validarTickerNaB3(tickerBase);
+    if (!isValido) {
+      throw new TickerInvalidoError(tickerBase);
+    }
+  }
 
   const criado = await client.query(
     "INSERT INTO ativos (ticker_base, classe) VALUES ($1, $2) RETURNING id, classe",

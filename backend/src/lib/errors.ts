@@ -9,3 +9,9 @@ export class SaldoInsuficienteError extends Error {
     super(`Venda de ${quantidadeSolicitada} maior que a posição atual de ${quantidadeDisponivel}`);
   }
 }
+
+export class TickerInvalidoError extends Error {
+  constructor(public ticker: string) {
+    super(`O ticker '${ticker}' não foi encontrado na B3.`);
+  }
+}

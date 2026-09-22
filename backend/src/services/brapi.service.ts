@@ -84,3 +84,19 @@ export async function popularCacheHistorico(ativoId: number, ticker: string) {
     console.error(`Erro ao buscar histórico de ${ticker}:`, erro);
   }
 }
+
+export async function validarTickerNaB3(ticker: string): Promise<boolean> {
+  try {
+    const response = await fetch(`https://brapi.dev/api/quote/${ticker}?token=${process.env.BRAPI_TOKEN}`);
+    const data = await response.json();
+
+    // A Brapi devolve um array 'results' vazio ou uma chave 'error' se o ticker for falso
+    if (data.error || !data.results || data.results.length === 0) {
+      return false;
+    }
+    return true;
+  } catch (erro) {
+    console.error(`Falha ao validar ticker ${ticker} na Brapi:`, erro);
+    return false;
+  }
+}

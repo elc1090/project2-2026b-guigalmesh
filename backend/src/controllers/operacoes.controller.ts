@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { createOperacaoSchema } from "../types/operacao";
 import { createOperacao, listOperacoes, deleteOperacao } from "../services/operacoes.service";
 import { getUsuarioId } from "../middleware/usuario";
-import { AtivoDesconhecidoError, SaldoInsuficienteError } from "../lib/errors";
+import { AtivoDesconhecidoError, SaldoInsuficienteError, TickerInvalidoError } from "../lib/errors";
 
 export async function postOperacao(req: Request, res: Response) {
   const parsed = createOperacaoSchema.safeParse(req.body);
@@ -22,6 +22,12 @@ export async function postOperacao(req: Request, res: Response) {
           codigo: "ATIVO_DESCONHECIDO",
           mensagem: `Ticker '${erro.ticker}' ainda não cadastrado. Informe "classe" (ACAO, FII ou RENDA_FIXA) para cadastrá-lo.`,
         },
+      });
+    }
+    // --- NOVO BLOCO CATCH AQUI ---
+    if (erro instanceof TickerInvalidoError) {
+      return res.status(400).json({
+        error: { codigo: "TICKER_INVALIDO", mensagem: erro.message },
       });
     }
     if (erro instanceof SaldoInsuficienteError) {
