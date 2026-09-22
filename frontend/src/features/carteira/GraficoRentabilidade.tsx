@@ -45,7 +45,7 @@ export function GraficoRentabilidade({ data }: GraficoRentabilidadeProps) {
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#9ca3af', fontSize: 12 }}
-              tickFormatter={(value) => `R$ ${(value / 1000)}k`} // Formata para R$ 100k
+              tickFormatter={(value: number) => `R$ ${(value / 1000)}k`} // Formata para R$ 100k
               dx={-10}
             />
 
